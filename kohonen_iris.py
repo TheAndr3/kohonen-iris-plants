@@ -48,14 +48,11 @@ print(f"Classes encontradas: {df['classe'].unique()}")
 print(f"Distribuição das classes:\n{df['classe'].value_counts()}\n")
 
 # Separando os atributos preditivos (X) das classes reais (y)
-# ATENÇÃO: As classes NÃO serão passadas à rede durante o treinamento.
-# Elas serão usadas apenas para validação posterior.
-X = df[nomes_colunas[:-1]].values  # 4 atributos numéricos
-y = df['classe'].values            # rótulos reais (apenas para validação)
+# ATENÇÃO: As classes NÃO serão passadas à rede durante o treinamento, elas serão usadas apenas para validação posterior.
+X = df[nomes_colunas[:-1]].values  
+y = df['classe'].values            
 
 # Normalização dos dados para o intervalo [0, 1]
-# Isso é importante para o SOM, pois evita que atributos com escalas
-# maiores dominem o cálculo de distância.
 normalizador = MinMaxScaler()
 X_normalizado = normalizador.fit_transform(X)
 
@@ -98,16 +95,7 @@ redes_som = {}
 
 for tamanho in tamanhos_grade:
     print(f"\n--- Treinando SOM {tamanho}x{tamanho} ---")
-
-    # ---------------------------------------------------------------
-    # PARÂMETRO RESTRITO: Raio de vizinhança fixo (sem decaimento)
-    # O parâmetro 'sigma' define o raio inicial da vizinhança.
-    # A função 'decay_function' controla como sigma e learning_rate
-    # decaem ao longo das iterações.
-    # Aqui, usamos uma função lambda que RETORNA SEMPRE O VALOR INICIAL,
-    # desabilitando completamente o decaimento do raio e da taxa de aprendizado.
-    # ---------------------------------------------------------------
-    raio_vizinhanca = tamanho / 2  # raio proporcional ao tamanho da grade
+    raio_vizinhanca = tamanho / 2  
 
     som = MiniSom(
         x=tamanho,
@@ -115,27 +103,18 @@ for tamanho in tamanhos_grade:
         input_len=num_atributos,
         sigma=raio_vizinhanca,
         learning_rate=taxa_aprendizado,
-        neighborhood_function='gaussian',  # função de vizinhança gaussiana
-        topology='rectangular',            # topologia retangular da grade
+        neighborhood_function='gaussian',  
+        topology='rectangular',            
         random_seed=RANDOM_SEED,
-        # Desabilitando o decaimento da taxa de aprendizado — permanece fixa em 0.01
-        # O parâmetro 'decay_function' aceita callable: retornamos sempre o valor original
         decay_function=lambda lr, t, max_iter: lr
     )
 
-    # ---------------------------------------------------------------
-    # PARÂMETRO RESTRITO: Desabilitando o decaimento do raio (sigma)
-    # A biblioteca minisom não aceita callable para sigma_decay_function,
-    # então sobrescrevemos o atributo interno após a criação do objeto.
-    # A lambda abaixo retorna sempre o sigma original, mantendo o raio fixo.
-    # ---------------------------------------------------------------
     som._sigma_decay_function = lambda sigma, t, max_iter: sigma
 
     # Inicialização dos pesos com valores aleatórios
     som.random_weights_init(X_treino)
 
     # Treinamento da rede SOM
-    # train_random: apresenta amostras aleatórias do conjunto de treinamento
     som.train_random(X_treino, num_iteracoes, verbose=True)
 
     # Armazenando a rede treinada
@@ -178,7 +157,6 @@ for idx, tamanho in enumerate(tamanhos_grade):
 plt.tight_layout()
 plt.savefig('u_matrix_comparacao.png', dpi=150, bbox_inches='tight')
 print("Gráfico da U-Matrix salvo em 'u_matrix_comparacao.png'")
-# plt.show() — descomente esta linha se estiver executando em ambiente com GUI
 print()
 
 # ==============================================================================
@@ -199,7 +177,6 @@ for tamanho in tamanhos_grade:
     som = redes_som[tamanho]
 
     # Extraindo os pesos (vetores de peso) de todos os neurônios da rede SOM
-    # get_weights() retorna uma matriz de forma (tamanho, tamanho, num_atributos)
     pesos = som.get_weights()
 
     # Reorganizando para uma matriz 2D: (tamanho*tamanho, num_atributos)
@@ -210,12 +187,12 @@ for tamanho in tamanhos_grade:
     print(f"Número de neurônios: {pesos_2d.shape[0]}")
     print(f"Dimensão dos pesos: {pesos_2d.shape[1]}")
 
-    # Aplicando K-means nos pesos dos neurônios (NÃO nos dados originais)
+    # Aplicando K-means nos pesos dos neurônios
     kmeans = KMeans(
         n_clusters=k,
         random_state=RANDOM_SEED,
-        n_init=10,       # número de inicializações para robustez
-        algorithm='lloyd' # algoritmo clássico de Lloyd (distância Euclidiana)
+        n_init=10,       
+        algorithm='lloyd'  # (distância Euclidiana)
     )
     kmeans.fit(pesos_2d)
 
@@ -266,13 +243,7 @@ for tamanho in tamanhos_grade:
 
     rotulos_preditos = np.array(rotulos_preditos)
 
-    # ---------------------------------------------------------------
     # Mapeamento dos clusters do K-means para as classes reais
-    # ---------------------------------------------------------------
-    # Como o K-means não sabe os nomes das classes, precisamos descobrir
-    # qual cluster corresponde a qual classe. Para cada cluster, verificamos
-    # qual classe real aparece com mais frequência.
-    # ---------------------------------------------------------------
     mapeamento_cluster_classe = {}
     for cluster_id in range(k):
         # Índices das amostras de teste atribuídas a este cluster
