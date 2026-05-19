@@ -1,0 +1,39 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# === Ambientes virtuais ===
+venv/
+env/
+.env/
+Lib/
+Scripts/
+Include/
+pyvenv.cfg
+
+# === Distribuição / Pacotes ===
+dist/
+build/
+*.egg-info/
+*.egg
+
+# === pip ===
+pip-log.txt
+pip-delete-this-directory.txt
+
+# === IDEs e Editores ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# === Sistema Operacional ===
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# === Imagens geradas pelo script ===
+u_matrix_comparacao.png
